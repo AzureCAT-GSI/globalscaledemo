@@ -209,11 +209,11 @@
           ],
           "properties":
           {
-            "RepoUrl": "https://github.com/kaevans/GlobalDemo.git",
+            "RepoUrl": "https://github.com/kaevans/globalscaledemo.git",
             "branch": "master",
             "isManualIntegration": true
           }
-        }      
+        }
       ],
       "copy":
       {

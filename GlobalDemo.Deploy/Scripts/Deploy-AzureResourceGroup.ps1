@@ -110,62 +110,35 @@ New-AzureResourceGroup -Name $ResourceGroupName `
                         @OptionalParameters `
                         -Force -Verbose
 
-						#sleep for 30 seconds to allow the GitHub publishing to work
+#sleep for 30 seconds to allow the GitHub publishing to work
 Write-Output "Sleeping for 3 minutes to allow GitHub publishing to work"
 [System.Threading.Thread]::Sleep(180000)
 Write-Output "Waking back up... nice nap."
 
 $webSites = Get-AzureResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.Web/sites"
-#Add traffic manager
-#$inputParameters = (Get-Content $TemplateParametersFile) -join "`n" | ConvertFrom-Json
-#$inputParameters.parameters.uniqueDnsName
-
-#Set the storage accounts in appSettings for the web applications
-
 $storageAccounts = Get-AzureResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.Storage/storageAccounts"
 
+#Add each storage account to the existing appSettings
 foreach($site in $webSites)
-{            
-	$newAppSettings = New-Object Hashtable
-	foreach($sa in $storageAccounts)
-	{		
-		$newAppSettings.Add($sa.ResourceName,("DefaultEndpointsProtocol=https;AccountName=" + $sa.ResourceName.ToLower() + ";AccountKey=" + (Get-AzureStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $sa.ResourceName.ToLower()).Key1));
-	}
-	Switch-AzureMode AzureServiceManagement
+{
+    $siteName = $site.ResourceName
+    (Invoke-AzureResourceAction -ResourceGroupName $ResourceGroupName `
+     -ResourceType Microsoft.Web/sites/Config -Name $siteName/appsettings `
+     -Action list -ApiVersion 2015-08-01 -Force).Properties
 
-	$keepGoing = $true;
-	do
-	{
-		$s = Get-AzureWebsite -Name $site.ResourceName
-		Write-Output ("Getting appSettings for site " + $site.ResourceName)
-        $oldAppSettings = $s.AppSettings
-		if($oldAppSettings.Keys.Length -ge 6)
-		{
-			$keepGoing = $false;
-			foreach($key in $oldAppSettings.Keys)
-			{
-                Write-Output ($key + " - " + $oldAppSettings[$key])
+    $props = (Invoke-AzureResourceAction -ResourceGroupName $ResourceGroupName `
+     -ResourceType Microsoft.Web/sites/Config -Name $siteName/appsettings `
+     -Action list -ApiVersion 2015-08-01 -Force).Properties
 
-                Write-Output ("Contains key? " + $newAppSettings.ContainsKey($key))
+    $hash = @{}
+    $props | Get-Member -MemberType NoteProperty | % { $hash[$_.Name] = $props.($_.Name) }
 
-				if($newAppSettings.ContainsKey($key) -ne $true)        
-				{
-					Write-Output ("Adding key " + $key + " - " + $oldAppSettings[$key])
-					$newAppSettings.Add($key, $oldAppSettings[$key])
-				}
-			}
-		}
-		else
-		{
-			#For some reason, not all appSettings are being returned.  Try again
-			Write-Output "Not all keys were returned.  Trying again."
-			$keepGoing = $true;
-		}
-
-	}
-	while($keepGoing)
-        
-    Set-AzureWebsite -Name $site.ResourceName -AppSettings $newAppSettings                
-
+    foreach($sa in $storageAccounts)
+    {
+        $hash[$sa.ResourceName] = ("DefaultEndpointsProtocol=https;AccountName=" + $sa.ResourceName.ToLower() + ";AccountKey=" + (Get-AzureStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $sa.ResourceName.ToLower()).Key1)        
+    }
+    
+    Switch-AzureMode AzureServiceManagement
+    Set-AzureWebsite -Name $siteName -AppSettings $hash
 	Switch-AzureMode AzureResourceManager
 }

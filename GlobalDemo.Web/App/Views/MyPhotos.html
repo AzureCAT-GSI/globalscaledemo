@@ -1,0 +1,39 @@
+﻿<h3>My Photos</h3>
+<p>All of my photos.  In one place.</p>
+<div ng-init="populate()">
+    <p class="error">{{error}}</p>
+    <p><b>{{loadingMessage}}</b></p>
+    <div class="panel">
+        <a href="#/Upload">Upload a new photo</a>
+        <button ng-click="populate();" class="btn btn-default">Populate</button>
+        <button ng-click="clearUserCache();" class="btn btn-default">Clear User Cache</button>
+        <button ng-click="clearAllCache();" class="btn btn-default">Clear All Users Cache</button>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Storage Account Name</th>
+                    <th>Uploaded By</th>                    
+                    <th>Image Thumbnail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-ng-repeat="item in photoList">
+                    <td>
+                        <p>{{item.ServerFileName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.StorageAccountName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.OwnerName}}</p>
+                    </td>
+                    <td>
+                        <a href="{{item.BlobURL}}"><img src="{{item.ThumbnailURL}}" alt="{{item.ID}}" /></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

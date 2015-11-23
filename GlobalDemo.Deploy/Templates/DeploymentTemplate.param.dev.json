@@ -1,0 +1,28 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters":
+  {
+    "uniqueDnsName":
+    {
+      "value": "kirkeglobaldemo"
+    },
+
+    "siteLocations":
+    {
+      "value":
+      [
+        "East US",
+        "West US"
+      ]
+    },
+    "aadTenant":
+    {
+      "value": "kirkevanslive.onmicrosoft.com"
+    },
+    "aadAudience":
+    {
+      "value": "ad5bf3e0-f0db-4c57-9e08-1ef5419ca5f6"
+    }
+  }
+}

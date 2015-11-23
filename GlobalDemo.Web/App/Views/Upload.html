@@ -1,0 +1,17 @@
+﻿<div>
+    <p class="error">{{error}}</p>    
+    <div class="panel">
+        <div class="input-group">
+            <input type="file" id="myFile" name="myFile" />            
+            <span class="input-group-btn">
+                <button ng-click="upload();" class="btn btn-default">Upload</button>
+            </span>
+        </div>
+        <output id="list"></output>
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{progress}}"
+                 aria-valuemin="0" aria-valuemax="100" style="width:70%">              
+            </div>
+        </div>
+    </div>
+</div>

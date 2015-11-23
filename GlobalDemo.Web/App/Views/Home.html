@@ -1,0 +1,35 @@
+﻿<h3>Today's Photos by Our Users</h3>
+<p>These are the photos uploaded by our users today</p>
+<div ng-init="populate()">
+    <p class="error">{{error}}</p>
+    <p><b>{{loadingMessage}}</b></p>
+    <div class="panel">
+        <button ng-click="populate();" class="btn btn-default">Populate</button>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Storage Account Name</th>
+                    <th>Uploaded By</th>
+                    <th>Image Thumbnail</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-ng-repeat="item in photoList">
+                    <td>
+                        <p>{{item.ServerFileName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.StorageAccountName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.OwnerName}}</p>
+                    </td>
+                    <td>
+                        <a href="{{item.BlobURL}}"><img src="{{item.ThumbnailURL}}" alt="{{item.ID}}" /></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

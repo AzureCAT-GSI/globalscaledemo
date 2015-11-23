@@ -1,0 +1,443 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters":
+  {
+    "uniqueDnsName":
+    {
+      "type": "string",
+      "metadata":
+      {
+        "description": "Relative DNS name for the traffic manager profile, resulting FQDN will be <uniqueDnsName>.trafficmanager.net, must be globally unique."
+      }
+    },
+    "siteLocations":
+    {
+      "type": "array",
+      "defaultValue":
+      [
+        "West Europe",
+        "East Asia",
+        "Southeast Asia",
+        "East US",
+        "West US"
+      ],
+      "metadata":
+      {
+        "description": "Locations"
+      }
+    },
+    "aadTenant":
+    {
+      "type": "string",
+      "defaultValue": "contoso.onmicrosoft.com"
+    },
+    "aadAudience":
+    {
+      "type": "string",
+      "defaultValue": "ad5bf3e0-f0db-4c57-9e08-1ef5419ca5f6"
+    }
+
+  },
+  "variables":
+  {
+    "StorageName": "[concat('Storage', uniqueString(resourceGroup().id))]",
+    "StorageType": "Standard_LRS",
+    "HostingPlanName": "[concat('plan', uniqueString(resourceGroup().id))]",
+    "HostingPlanSKU": "Standard",
+    "HostingPlanWorkerSize": "1",
+    "WebSiteName": "[concat('WebSite', uniqueString(resourceGroup().id))]",
+    "RedisCacheName": "[concat('redis', uniqueString(resourceGroup().id))]",
+    "RedisCacheSKUName": "Basic",
+    "RedisCacheSKUFamily": "C",
+    "RedisCacheSKUCapacity": 0,
+    "RedisCacheRedisVersion": "2.8"
+  },
+  "resources":
+  [
+    {
+      "name": "[concat(variables('StorageName'),copyIndex())]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[parameters('siteLocations')[copyIndex()]]",
+      "apiVersion": "2015-05-01-preview",
+      "dependsOn":
+      [
+      ],
+      "tags":
+      {
+        "displayName": "Storage"
+      },
+      "properties":
+      {
+        "accountType": "[variables('StorageType')]"
+      },
+      "copy":
+      {
+        "name": "storageCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "name": "[concat(variables('RedisCacheName'),copyIndex())]",
+      "type": "Microsoft.Cache/Redis",
+      "location": "[parameters('siteLocations')[copyIndex()]]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn":
+      [
+      ],
+      "tags":
+      {
+        "displayName": "RedisCache"
+      },
+      "properties":
+      {
+        "sku":
+        {
+          "name": "[variables('RedisCacheSKUName')]",
+          "family": "[variables('RedisCacheSKUFamily')]",
+          "capacity": "[variables('RedisCacheSKUCapacity')]"
+        },
+        "redisVersion": "[variables('RedisCacheRedisVersion')]"
+      },
+      "copy":
+      {
+        "name": "redisCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "name": "[concat(variables('HostingPlanName'),copyIndex())]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2015-08-01",
+      "location": "[parameters('siteLocations')[copyIndex()]]",
+      "sku":
+      {
+        "name": "S1",
+        "tier": "Standard",
+        "capacity": 1
+      },
+      "dependsOn":
+      [
+      ],
+      "tags":
+      {
+        "displayName": "HostingPlan"
+      },
+      "properties":
+      {
+        "name": "[concat(variables('HostingPlanName'),copyIndex())]",
+      },
+      "copy":
+      {
+        "name": "planCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "name": "[concat(variables('WebSiteName'),copyIndex())]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2015-08-01",
+      "location": "[parameters('siteLocations')[copyIndex()]]",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/serverfarms/', concat(variables('HostingPlanName'),copyIndex()))]",
+        "[concat('Microsoft.Storage/storageAccounts/', concat(variables('StorageName'), copyIndex()))]",
+        "[concat('Microsoft.Cache/Redis/', concat(variables('RedisCacheName'), copyIndex()))]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', concat(variables('HostingPlanName'),copyIndex()))]": "Resource",
+        "displayName": "WebSite"
+      },
+      "properties":
+      {
+        "serverFarmId": "[concat(variables('HostingPlanName'),copyIndex())]"
+      },
+      "resources":
+      [
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "config",
+          "dependsOn":
+          [
+            "[resourceId('Microsoft.Web/sites',concat(variables('WebSiteName'),copyIndex()))]"
+          ],
+          "properties":
+          {
+            "netFrameworkVersion": "4.6",
+            "alwaysOn": true,
+            "requestTracingEnaled": true,
+            "httpLoggingEnabled": true,
+            "logsDirectorySizeLimit": 40,
+            "detailedErrorLoggingEnabled": true,
+            "remoteDebuggingEnabled": false,
+            "remoteDebuggingVersion": "VS2013",
+            "defaultDocuments":
+            [
+
+              "index.html",
+              "hostingstart.html"
+            ]
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "name": "appsettings",
+          "type": "config",
+          "dependsOn":
+          [
+            "[resourceId('Microsoft.Web/sites', concat(variables('WebSiteName'),copyIndex()))]"
+          ],
+          "properties":
+          {
+            "ida:Tenant": "[parameters('aadTenant')]",
+            "ida:Audience": "[parameters('aadAudience')]",
+            "localStorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+            "redisCacheConnectionString": "[concat(variables('RedisCacheName'), copyIndex(),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=',listKeys(resourceId('Microsoft.Cache/Redis',concat(variables('RedisCacheName'), copyIndex())),'2014-04-01-preview').primaryKey)]",
+            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]"
+          }
+        },
+        {
+          "apiVersion": "2015-08-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn":
+          [
+            "[resourceId('Microsoft.Web/sites', concat(variables('WebSiteName'),copyIndex()))]"
+          ],
+          "properties":
+          {
+            "RepoUrl": "https://github.com/kaevans/GlobalDemo.git",
+            "branch": "master",
+            "isManualIntegration": true
+          }
+        }      
+      ],
+      "copy":
+      {
+        "name": "siteCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[concat('ServerErrors ', variables('WebSiteName'),copyIndex())]",
+      "type": "Microsoft.Insights/alertrules",
+      "location": "East US",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/sites/', variables('WebSiteName'),copyIndex())]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('WebSiteName'), copyIndex())]": "Resource",
+        "displayName": "ServerErrorsAlertRule"
+      },
+      "properties":
+      {
+        "name": "[concat('ServerErrors ', variables('WebSiteName'),copyIndex())]",
+        "description": "[concat(variables('WebSiteName'), copyIndex(), ' has some server errors, status code 5xx.')]",
+        "isEnabled": false,
+        "condition":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource":
+          {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('WebSiteName'),copyIndex())]",
+            "metricName": "Http5xx"
+          },
+          "operator": "GreaterThan",
+          "threshold": 0.0,
+          "windowSize": "PT5M"
+        },
+        "action":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails":
+          [
+          ]
+        }
+      },
+      "copy":
+      {
+        "name": "serverErrorsCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[concat('ForbiddenRequests ', variables('WebSiteName'),copyIndex())]",
+      "type": "Microsoft.Insights/alertrules",
+      "location": "East US",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/sites/', variables('WebSiteName'),copyIndex())]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('WebSiteName'), copyIndex())]": "Resource",
+        "displayName": "ForbiddenRequestsAlertRule"
+      },
+      "properties":
+      {
+        "name": "[concat('ForbiddenRequests ', variables('WebSiteName'),copyIndex())]",
+        "description": "[concat(variables('WebSiteName'),copyIndex(), ' has some requests that are forbidden, status code 403.')]",
+        "isEnabled": false,
+        "condition":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource":
+          {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('WebSiteName'),copyIndex())]",
+            "metricName": "Http403"
+          },
+          "operator": "GreaterThan",
+          "threshold": 0,
+          "windowSize": "PT5M"
+        },
+        "action":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails":
+          [
+          ]
+        }
+      },
+      "copy":
+      {
+        "name": "forbiddenRequestsCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[concat('CPUHigh ', variables('HostingPlanName'),copyIndex())]",
+      "type": "Microsoft.Insights/alertrules",
+      "location": "East US",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/serverfarms/', variables('HostingPlanName'),copyIndex())]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('HostingPlanName'), copyIndex())]": "Resource",
+        "displayName": "CPUHighAlertRule"
+      },
+      "properties":
+      {
+        "name": "[concat('CPUHigh ', variables('HostingPlanName'),copyIndex())]",
+        "description": "[concat('The average CPU is high across all the instances of ', variables('HostingPlanName'),copyIndex())]",
+        "isEnabled": false,
+        "condition":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource":
+          {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('HostingPlanName'),copyIndex())]",
+            "metricName": "CpuPercentage"
+          },
+          "operator": "GreaterThan",
+          "threshold": 90,
+          "windowSize": "PT15M"
+        },
+        "action":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails":
+          [
+          ]
+        }
+      },
+      "copy":
+      {
+        "name": "cpuHighAlertCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[concat('LongHttpQueue ', variables('HostingPlanName'),copyIndex())]",
+      "type": "Microsoft.Insights/alertrules",
+      "location": "East US",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/serverfarms/', variables('HostingPlanName'),copyIndex())]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('HostingPlanName'), copyIndex())]": "Resource",
+        "displayName": "LongHttpQueueAlertRule"
+      },
+      "properties":
+      {
+        "name": "[concat('LongHttpQueue ', variables('HostingPlanName'),copyIndex())]",
+        "description": "[concat('The HTTP queue for the instances of ', variables('HostingPlanName'),copyIndex(), ' has a large number of pending requests.')]",
+        "isEnabled": false,
+        "condition":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.ThresholdRuleCondition",
+          "dataSource":
+          {
+            "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleMetricDataSource",
+            "resourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('HostingPlanName'),copyIndex())]",
+            "metricName": "HttpQueueLength"
+          },
+          "operator": "GreaterThan",
+          "threshold": 100.0,
+          "windowSize": "PT5M"
+        },
+        "action":
+        {
+          "odata.type": "Microsoft.Azure.Management.Insights.Models.RuleEmailAction",
+          "sendToServiceOwners": true,
+          "customEmails":
+          [
+          ]
+        }
+      },
+      "copy":
+      {
+        "name": "longHttpQueueCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "name": "[concat(variables('WebSiteName'),copyIndex())]",
+      "type": "Microsoft.Insights/components",
+      "location": "Central US",
+      "dependsOn":
+      [
+        "[concat('Microsoft.Web/sites/', variables('WebSiteName'),copyIndex())]"
+      ],
+      "tags":
+      {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', variables('WebSiteName'), copyIndex())]": "Resource",
+        "displayName": "AppInsightsComponent"
+      },
+      "properties":
+      {
+        "applicationId": "[concat(variables('WebSiteName'),copyIndex())]"
+      },
+      "copy":
+      {
+        "name": "appInsightsCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    }
+  ],
+  "outputs":
+  {
+
+
+  }
+
+}

@@ -1,0 +1,30 @@
+﻿<div ng-init="populate()">
+    <p class="error">{{error}}</p>
+    <p>{{loadingMessage}}</p>
+    <div class="panel">
+        <table class="table table-striped">
+            <tbody>
+                <tr data-ng-repeat="item in photoList">
+                    <td>
+                        <p>{{item.ID}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.BlobURL}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.StorageAccountName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.Owner}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.ServerFileName}}</p>
+                    </td>
+                    <td>
+                        <a href="{{item.BlobURL}}"><img src="{{item.ThumbnailURL}}" alt="{{item.ID}}" height="50" width="50" /></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

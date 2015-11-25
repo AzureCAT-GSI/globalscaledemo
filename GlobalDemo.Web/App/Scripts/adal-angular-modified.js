@@ -52,13 +52,42 @@ if (typeof module !== 'undefined' && module.exports) {
                     if (existingHash) {
                         pathDefault = pathDefault.replace(existingHash, '');
                     }
+
                     configOptions.redirectUri = configOptions.redirectUri || pathDefault;
                     configOptions.postLogoutRedirectUri = configOptions.postLogoutRedirectUri || pathDefault;
+
+                    /* 
+                        Modified 11/24/2015 by @kaevans 
+                        Call a service to configure ADAL instead of
+                        providing a hard coded value
+                    */
+                    if (configOptions.clientId) {
+                        //Use the value provided by the user
+                    }
+                    else {
+                        //HACK.  Call a service using jQuery.  Got sick of fighting
+                        //angular injector.  
+                        var myConfig = { instance: "", clientId: "", tenant: "" };
+                        var resultText = $.ajax(
+                            {
+                                url: '/api/adalconfig',
+                                dataType: JSON,
+                                async: false
+                            }).responseText;
+
+                        console.log(resultText);
+                        var myConfig = $.parseJSON(resultText)
+                        
+                        configOptions.clientId = myConfig.ClientId;
+                        configOptions.instance = myConfig.Instance;
+                        configOptions.tenant = myConfig.Tenant;
+                    }
+                    /* End of modification */
 
                     if (httpProvider && httpProvider.interceptors) {
                         httpProvider.interceptors.push('ProtectedResourceInterceptor');
                     }
-
+                                     
                     // create instance with given config
                     _adal = new AuthenticationContext(configOptions);
                 } else {

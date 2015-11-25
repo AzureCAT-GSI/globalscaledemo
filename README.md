@@ -7,7 +7,7 @@ The web application shows how to create an Angular client that uploads directly 
 The Angular client accesses a Web API that uses output caching, leveraging a library written by Filip W (https://github.com/filipw/AspNetWebApi-OutputCache/).
 When the file is uploaded, it is replicated to multiple storage accounts around the world, a thumbnail is created locally in each region, and the local Redis cache is updated.
 
-<a href="http://armviz.io/#/?load=https://raw.githubusercontent.com/kaevans/GlobalDemo/GlobalDemo.Deploy/Templates/WebSite.json" target="_blank">
+<a href="http://armviz.io/#/?load=https://raw.githubusercontent.com/kaevans/GlobalScaleDemo/GlobalDemo.Deploy/Templates/DeploymentTemplate.json" target="_blank">
   <img src="http://armviz.io/visualizebutton.png"/>
 </a>
   
@@ -15,9 +15,8 @@ When the file is uploaded, it is replicated to multiple storage accounts around 
 Deployment is performed using an Azure Resource Manager template.  The template will deploy the solution to as many regions as you wish, creating a local storage account and Azure Redis Cache.
 
 1. Clone this repository locally.  
-2. Create an Azure AD application as shown above.  
-3. Update the app.js file with the tenant and client ID for your Azure AD application.
-4. Update the WebSite.param.dev.json file with the parameters for your deployment.  For the siteLocations parameter, provide the names of the Azure regions that the solution will be deployed to.  
+2. Create an Azure AD application as shown below.  
+3. Update the WebSite.param.dev.json file with the parameters for your deployment.  For the siteLocations parameter, provide the names of the Azure regions that the solution will be deployed to.  Make sure that the aadTenant matches the configuration from the application registered in Azure AD (e.g. contoso.onmicrosoft.com) and the aadAudience matches the client ID from your Azure AD application (e.g. 3ab0b569-daeb-4d05-a1b5-1de93901e673)
 5. Open Windows PowerShell and run the DeployAzureResourceGroup.ps1.  
 
 Alternatively, open the solution in Visual Studio 2015.  Right-click on the GlobalDemo.Deploy project and choose Deploy.  Provide the subscription and resource group as well as parameter values.
@@ -35,18 +34,14 @@ The following parameters are used:
 
 ## Authentication
 Getting started is simple!  To run this sample you will need:
-- Visual Studio 2013
+- Visual Studio 2015
 - An Internet connection
 - An Azure subscription (a free trial is sufficient)
 
 Every Azure subscription has an associated Azure Active Directory tenant.  If you don't already have an Azure subscription, you can get a free subscription by signing up at [http://www.windowsazure.com](http://www.windowsazure.com).  All of the Azure AD features used by this sample are available free of charge.
 
-### Step 1:  Clone or download this repository
 
-From your shell or command line:
-`git clone https://github.com/Azure-Samples/SinglePageApp-DotNet.git`
-
-### Step 2:  Register the sample with your Azure Active Directory tenant
+### Step 1:  Register the sample with your Azure Active Directory tenant
 
 1. Sign in to the [Azure management portal](https://manage.windowsazure.com).
 2. Click on Active Directory in the left hand nav.
@@ -64,7 +59,7 @@ All done!  Before moving on to the next step, you need to find the Client ID of 
 2. Find the Client ID value and copy it to the clipboard.
 
 
-### Step 3:  Enable the OAuth2 implicit grant for your application
+### Step 2:  Enable the OAuth2 implicit grant for your application
 
 By default, applications provisioned in Azure AD are not enabled to use the OAuth2 implicit grant. In order to run this sample, you need to explicitly opt in.
 
@@ -73,15 +68,14 @@ By default, applications provisioned in Azure AD are not enabled to use the OAut
 3. Open the manifest file with a text editor. Search for the `oauth2AllowImplicitFlow` property. You will find that it is set to `false`; change it to `true` and save the file.
 4. Using the Manage Manifest button, upload the updated manifest file. Save the configuration of the app.
 
-### Step 4:  Configure the sample to use your Azure Active Directory tenant to debug locally
+### Step 3:  Configure the sample to use your Azure Active Directory tenant to debug locally
 
 1. Open the solution in Visual Studio 2015.
 2. Open the `web.config` file.
 3. Find the app key `ida:Tenant` and replace the value with your AAD tenant name.
 4. Find the app key `ida:Audience` and replace the value with the Client ID from the Azure portal.
 5. Open the file `App/Scripts/App.js` and locate the line `adalAuthenticationServiceProvider.init(`.
-6. Replace the value of `tenant` with your AAD tenant name.
-7. Replace the value of `clientId` with the Client ID from the Azure portal.
+6. Normally using ADAL.js you would add the client ID and tenant to the app.js file.  Instead, make sure they are EMPTY STRINGS (e.g.  '').  This sample has been modified to call a Web API and pull those values dynamically.  
 
 ### Step 5:  Run the sample
 

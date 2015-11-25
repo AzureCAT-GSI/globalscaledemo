@@ -2,6 +2,7 @@
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Queue;
+using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;
@@ -280,12 +281,14 @@ namespace GlobalDemo.DAL.Azure
 
             //Must use a shared access signature when copying across accounts
             //  else the target cannot read from source and you will get a 404
+            //  Subtract 1 hour and add 1 hour to account for time drift between
+            //  servers
 
             string signature = sourceBlob.GetSharedAccessSignature(
                 new SharedAccessBlobPolicy
                 {
                     Permissions = SharedAccessBlobPermissions.Read,
-                    SharedAccessStartTime = System.DateTime.Now,
+                    SharedAccessStartTime = System.DateTime.Now.AddHours(-1),
                     SharedAccessExpiryTime = System.DateTime.Now.AddHours(1)
                 });
 
@@ -295,9 +298,13 @@ namespace GlobalDemo.DAL.Azure
 
             try
             {
+                //Set a retry policy to try again in 10 seconds, 3 max attempts.
+                var retryPolicy = new LinearRetry(new TimeSpan(0, 0, 10), 3);
+                var options = new BlobRequestOptions { RetryPolicy = retryPolicy };
+                
                 //The StartCopy method uses spare bandwidth, there is
                 //no SLA on how fast this will be copied.
-                taskId = targetBlob.StartCopy(sourceBlob);
+                taskId = targetBlob.StartCopy(sourceUri, options: options);
 
             }
             catch (Exception oops)

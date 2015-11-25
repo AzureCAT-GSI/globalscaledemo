@@ -20,9 +20,9 @@ angular.module('todoApp', ['ngRoute','AdalAngular','azureBlobUpload'])
 
     adalProvider.init(
         {
-            instance: 'https://login.microsoftonline.com/', 
-            tenant: 'kirkevanslive.onmicrosoft.com',
-            clientId: 'ad5bf3e0-f0db-4c57-9e08-1ef5419ca5f6',
+            instance: '', 
+            tenant: '',
+            clientId: '',
             extraQueryParameter: 'nux=1',
             cacheLocation: 'localStorage', // enable this for IE, as sessionStorage does not work for localhost.
         },

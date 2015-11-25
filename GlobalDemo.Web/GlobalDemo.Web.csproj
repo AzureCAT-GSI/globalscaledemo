@@ -180,22 +180,25 @@
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="App_Start\StorageConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\ADALConfigController.cs" />
     <Compile Include="Controllers\PhotoController.cs" />
     <Compile Include="Controllers\UploadController.cs" />
     <Compile Include="Controllers\UserPhotosController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\ADALConfigResponse.cs" />
     <Compile Include="Models\CompleteRequest.cs" />
     <Compile Include="Models\StorageResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App\Scripts\adal-angular.js" />
+    <Content Include="App\Scripts\adal-angular-modified.js" />
     <Content Include="App\Scripts\adal.js" />
     <Content Include="App\Scripts\app.js" />
     <Content Include="App\Scripts\azure-blob-upload.js" />
+    <Content Include="App\Scripts\configSvc.js" />
     <Content Include="App\Scripts\homeCtrl.js" />
     <Content Include="App\Scripts\homeSvc.js" />
     <Content Include="App\Scripts\indexCtrl.js" />

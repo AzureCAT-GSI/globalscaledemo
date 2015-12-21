@@ -2,8 +2,7 @@
 angular.module('todoApp')
 .factory('configSvc', ['$http', function ($http) {
     return {
-        getConfig: function () {
-            console.log('w00t!');
+        getConfig: function () {            
             return $http.get('/api/adalconfig');
         }
     };

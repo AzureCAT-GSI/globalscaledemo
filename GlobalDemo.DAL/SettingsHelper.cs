@@ -11,8 +11,10 @@ namespace GlobalDemo.DAL
         public static string Tenant { get { return ConfigurationManager.AppSettings["ida:Tenant"]; } }
         public static string Audience { get { return ConfigurationManager.AppSettings["ida:Audience"]; } }
         public static string LocalStorageConnectionString { get { return ConfigurationManager.AppSettings["localStorageConnectionString"]; } }
+        public static string CurrentRegion { get { return ConfigurationManager.AppSettings["currentRegion"]; } }
         public static string RedisCacheConnectionString { get { return ConfigurationManager.AppSettings["redisCacheConnectionString"]; } }               
         public static string AzureWebJobsDashboard { get { return ConfigurationManager.AppSettings["AzureWebJobsDashboard"]; } }
         public static string AzureWebJobsStorage { get { return ConfigurationManager.AppSettings["AzureWebJobsStorage"]; } }
+
     }
 }

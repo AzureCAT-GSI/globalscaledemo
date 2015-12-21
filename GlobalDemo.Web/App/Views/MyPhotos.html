@@ -13,8 +13,10 @@
             <thead>
                 <tr>
                     <th>File Name</th>
-                    <th>Storage Account Name</th>
-                    <th>Uploaded By</th>                    
+                    <th>Origin Storage Account</th>
+                    <th>Origin Region</th>
+                    <th>Current Region</th>
+                    <th>Uploaded By</th>
                     <th>Image Thumbnail</th>
                 </tr>
             </thead>
@@ -25,6 +27,12 @@
                     </td>
                     <td>
                         <p>{{item.StorageAccountName}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.OriginRegion}}</p>
+                    </td>
+                    <td>
+                        <p>{{item.CurrentRegion}}</p>
                     </td>
                     <td>
                         <p>{{item.OwnerName}}</p>

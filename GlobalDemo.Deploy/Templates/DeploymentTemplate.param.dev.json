@@ -5,7 +5,7 @@
   {
     "uniqueDnsName":
     {
-      "value": "kirkeglobaldemo"
+      "value": "theconnected"
     },
 
     "siteLocations":
@@ -18,11 +18,11 @@
     },
     "aadTenant":
     {
-      "value": "kirkevanslive.onmicrosoft.com"
+      "value": "theconnected.onmicrosoft.com"
     },
     "aadAudience":
     {
-      "value": "ad5bf3e0-f0db-4c57-9e08-1ef5419ca5f6"
+      "value": "97e6630b-f085-4ad1-bace-3459dbba0dc4"
     }
   }
 }

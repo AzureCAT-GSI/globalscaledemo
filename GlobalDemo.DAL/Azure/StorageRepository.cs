@@ -238,6 +238,25 @@ namespace GlobalDemo.DAL.Azure
             await queue.AddMessageAsync(message);
         }
 
+        /// <summary>
+        /// Sends a queue message
+        /// </summary>
+        /// <param name="data">The message to send</param>
+        /// <returns></returns>
+        public async Task SendBroadcastQueueMessageAsync(string data)
+        {
+            var client = _account.CreateCloudQueueClient();
+            
+            //Send to the broadcast queue.  The local
+            //  web job will pick this up and broadcast
+            //  to every region.  
+            var queue = client.GetQueueReference(DAL.Azure.StorageConfig.BroadcastQueueName);
+
+            var message = new CloudQueueMessage(data);
+
+            await queue.AddMessageAsync(message);
+        }
+
 
         /// <summary>
         /// Replicates a blob from the current storage account
@@ -269,12 +288,14 @@ namespace GlobalDemo.DAL.Azure
             var sourceContainer = sourceBlobClient.GetContainerReference(sourceContainerName);
             var targetContainer = targetBlobClient.GetContainerReference(targetContainerName);
 
-            bool created = await targetContainer.CreateIfNotExistsAsync();
-            if (created)
-            {
-                var perms = await sourceContainer.GetPermissionsAsync();
-                await targetContainer.SetPermissionsAsync(perms);
-            }
+            //Can be uncommented and used during debugging
+            //  to avoid deploying the entire app to two regions
+            //bool created = await targetContainer.CreateIfNotExistsAsync();
+            //if (created)
+            //{
+            //    var perms = await sourceContainer.GetPermissionsAsync();
+            //    await targetContainer.SetPermissionsAsync(perms);
+            //}
 
             CloudBlockBlob sourceBlob = sourceContainer.GetBlockBlobReference(blobName);
 

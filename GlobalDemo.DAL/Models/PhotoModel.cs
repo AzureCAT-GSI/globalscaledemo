@@ -23,6 +23,8 @@ namespace GlobalDemo.DAL.Models
             this.BlobURL = entity.BlobURL;
             this.ThumbnailURL = entity.ThumbnailURL;
             this.DateAdded = entity.DateAdded;
+            this.OriginRegion = entity.OriginRegion;
+            
         }
         [DataMember]
         public string ID { get; set; }
@@ -40,5 +42,21 @@ namespace GlobalDemo.DAL.Models
         public string ThumbnailURL { get; set; }
         [DataMember]
         public DateTime DateAdded { get; set; }
+        [DataMember]
+        public string OriginRegion { get; set; }
+        [DataMember]
+        public string CurrentRegion
+        {
+            get
+            {
+                //Current region is not persisted with other data,
+                //it is configurable per region.
+                return SettingsHelper.CurrentRegion;
+            }
+            set
+            {
+                //no-op
+            }
+        }
     }
 }

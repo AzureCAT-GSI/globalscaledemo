@@ -80,23 +80,23 @@ namespace GlobalDemo.Web.Controllers
             //Replace any commas with periods
             ownerName = ownerName.Replace(',', '.');
 
-            string message = string.Format("{0},{1},{2},{3}, {4}, {5}", item.ID, item.ServerFileName, item.StorageAccountName, owner, ownerName, item.BlobURL);
+            string message = string.Format(
+                "{0},{1},{2},{3}, {4}, {5}, {6}", 
+                item.ID, 
+                item.ServerFileName, 
+                item.StorageAccountName, 
+                owner, 
+                ownerName, 
+                item.BlobURL, 
+                SettingsHelper.CurrentRegion);
 
-            //Send a queue message to each storage account registered
-            //in AppSettings prefixed with "Storage"
-            
+            //Send a queue message to the local storage account 
+            //The local web job will pick it up and broadcast to 
+            //all storage accounts in appSettings prefixed with "Storage"
 
-            foreach (string key in ConfigurationManager.AppSettings.Keys)
-            {
-                if(key.ToLower().StartsWith("storage"))
-                {
-                    //This is a storage configuration  
-                    var repo = new StorageRepository(ConfigurationManager.AppSettings[key]);
-                    await repo.SendQueueMessageAsync(message);                    
-                }
-            }
-            
-            
+            var repo = new StorageRepository(SettingsHelper.LocalStorageConnectionString);
+            await repo.SendBroadcastQueueMessageAsync(message);
+                        
         }
     }
 }

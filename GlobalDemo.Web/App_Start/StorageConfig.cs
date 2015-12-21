@@ -52,6 +52,10 @@ namespace GlobalDemo.Web
             var queue = queueClient.GetQueueReference(GlobalDemo.DAL.Azure.StorageConfig.QueueName);
             await queue.CreateIfNotExistsAsync();
 
+            //Create the "broadcastqueue" queue if it doesn't exist
+            var broadcastQueue = queueClient.GetQueueReference(GlobalDemo.DAL.Azure.StorageConfig.BroadcastQueueName);
+            await queue.CreateIfNotExistsAsync();
+
             //Create the "photos" table if it doesn't exist
             var tableClient = account.CreateCloudTableClient();
             var table = tableClient.GetTableReference(GlobalDemo.DAL.Azure.StorageConfig.TableName);

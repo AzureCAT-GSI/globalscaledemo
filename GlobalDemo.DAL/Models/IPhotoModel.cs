@@ -16,5 +16,7 @@ namespace GlobalDemo.DAL.Models
         string Owner { get; set; }
         string OwnerName { get; set; }
         DateTime DateAdded { get; set; }
+        string OriginRegion { get; set; }
+        string CurrentRegion { get; set; }
     }
 }

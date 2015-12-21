@@ -187,7 +187,7 @@
           "type": "config",
           "dependsOn":
           [
-            "[resourceId('Microsoft.Web/sites', concat(variables('WebSiteName'),copyIndex()))]"
+            "[resourceId('Microsoft.Web/Sites', concat(variables('WebSiteName'),copyIndex()))]"
           ],
           "properties":
           {
@@ -196,7 +196,9 @@
             "localStorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
             "redisCacheConnectionString": "[concat(variables('RedisCacheName'), copyIndex(),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=',listKeys(resourceId('Microsoft.Cache/Redis',concat(variables('RedisCacheName'), copyIndex())),'2014-04-01-preview').primaryKey)]",
             "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
-            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]"
+            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+            "currentRegion": "[parameters('siteLocations')[copyIndex()]]"
+
           }
         },
         {
@@ -432,7 +434,7 @@
         "name": "appInsightsCopy",
         "count": "[length(parameters('siteLocations'))]"
       }
-    }
+    }    
   ],
   "outputs":
   {

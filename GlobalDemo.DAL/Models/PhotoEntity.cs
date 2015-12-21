@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace GlobalDemo.DAL.Models
 {
     [Serializable]
-    public class PhotoEntity : TableEntity, IPhotoModel
+    public class PhotoEntity : TableEntity
     {
         public PhotoEntity()  { }
 
@@ -24,6 +24,7 @@ namespace GlobalDemo.DAL.Models
             this.BlobURL = model.BlobURL;
             this.ThumbnailURL = model.ThumbnailURL;
             this.DateAdded = model.DateAdded;
+            this.OriginRegion = model.OriginRegion;
         }
 
         public string ID { get; set; }
@@ -37,5 +38,6 @@ namespace GlobalDemo.DAL.Models
         public int YearAdded { get; set; }
         public int MonthAdded { get; set; }
         public int DayAdded { get; set; }
+        public string OriginRegion { get; set; }
     }
 }

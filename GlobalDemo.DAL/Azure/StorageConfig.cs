@@ -13,6 +13,11 @@ namespace GlobalDemo.DAL.Azure
             get { return "uploadqueue"; }
         }
 
+        public static string BroadcastQueueName
+        {
+            get { return "broadcastqueue"; }
+        }
+
         public static string UserUploadBlobContainerName
         {
             get { return "uploads"; }

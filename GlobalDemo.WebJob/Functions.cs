@@ -3,6 +3,7 @@ using GlobalDemo.DAL.Azure;
 using GlobalDemo.DAL.Models;
 using Microsoft.Azure.WebJobs;
 using System;
+using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -11,7 +12,23 @@ namespace GlobalDemo.WebJob
     public class Functions
     {
 
+        public static async Task ProcessBroadcastQueue(
+            [QueueTrigger("broadcastqueue")] string message,
+            TextWriter log)
+        {
+            //Send a queue message to each storage account registered
+            //in AppSettings prefixed with "Storage"
 
+            foreach (string key in ConfigurationManager.AppSettings.Keys)
+            {
+                if (key.ToLower().StartsWith("storage"))
+                {
+                    //This is a storage configuration  
+                    var repo = new StorageRepository(ConfigurationManager.AppSettings[key]);
+                    await repo.SendQueueMessageAsync(message);
+                }
+            }
+        }
 
         // This function will get triggered/executed when a new message is written 
         // on an Azure Queue called queue.
@@ -31,7 +48,8 @@ namespace GlobalDemo.WebJob
                 StorageAccountName = m[2],
                 Owner = m[3],
                 OwnerName = m[4],
-                BlobURL = m[5]
+                BlobURL = m[5],
+                OriginRegion = m[6]
             };
 
             //Copy blob from source to destination

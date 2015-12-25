@@ -103,10 +103,10 @@ New-AzureRmResourceGroupDeployment -Name ((Get-ChildItem $TemplateFile).BaseName
                                    -Force -Verbose
 
 
-sleep for 30 seconds to allow the GitHub publishing to work
-Write-Output "Sleeping for 3 minutes to allow GitHub publishing to work"
-[System.Threading.Thread]::Sleep(180000)
-Write-Output "Waking back up... nice nap."
+#sleep for 30 seconds to allow the GitHub publishing to work
+#Write-Output "Sleeping for 3 minutes to allow GitHub publishing to work"
+#[System.Threading.Thread]::Sleep(180000)
+#Write-Output "Waking back up... nice nap."
 
 $params = (Get-Content $TemplateParametersFile) -join "`n" | ConvertFrom-Json
 
@@ -118,7 +118,7 @@ $storageAccounts = Get-AzureRmStorageAccount -ResourceGroupName $ResourceGroupNa
 $params = (Get-Content $TemplateParametersFile) -join "`n" | ConvertFrom-Json
 $tmProfileName = $params.parameters.uniqueDnsName.value
 
-$tmProfile = Get-AzureRmTrafficManagerProfile -ResourceGroupName $ResourceGroupName -Name $tmProfileName
+$tmProfile = Get-AzureRmTrafficManagerProfile -ResourceGroupName $ResourceGroupName -Name $tmProfileName -ErrorAction Ignore
 if($tmProfile -eq $null)
 {
     $tmProfile = New-AzureRmTrafficManagerProfile -ResourceGroupName $ResourceGroupName -Name $tmProfileName -ProfileStatus Enabled -TrafficRoutingMethod Performance -RelativeDnsName $tmProfileName -Ttl 30 -MonitorProtocol HTTPS -MonitorPort 443 -MonitorPath "/" 
@@ -151,7 +151,7 @@ foreach($site in $webSites)
 	Set-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $siteName -AppSettings $hash
 
     #Add each web site to the traffic manager endpoint
-    $endpoint = Get-AzureRmTrafficManagerEndpoint -Name $site.Location -Type AzureEndpoints -ProfileName $tmProfileName -ResourceGroupName $ResourceGroupName
+    $endpoint = Get-AzureRmTrafficManagerEndpoint -Name $site.Location -Type AzureEndpoints -ProfileName $tmProfileName -ResourceGroupName $ResourceGroupName -ErrorAction Ignore
     
     if($endpoint -eq $null)
     {   

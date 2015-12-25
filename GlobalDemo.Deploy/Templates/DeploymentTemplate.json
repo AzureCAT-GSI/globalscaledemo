@@ -41,12 +41,12 @@
   },
   "variables":
   {
-    "StorageName": "[concat('Storage', uniqueString(resourceGroup().id))]",
+    "StorageName": "[concat('storage', uniqueString(resourceGroup().id))]",
     "StorageType": "Standard_LRS",
     "HostingPlanName": "[concat('plan', uniqueString(resourceGroup().id))]",
     "HostingPlanSKU": "Standard",
     "HostingPlanWorkerSize": "1",
-    "WebSiteName": "[concat('WebSite', uniqueString(resourceGroup().id))]",
+    "WebSiteName": "[concat('website', uniqueString(resourceGroup().id))]",
     "RedisCacheName": "[concat('redis', uniqueString(resourceGroup().id))]",
     "RedisCacheSKUName": "Basic",
     "RedisCacheSKUFamily": "C",
@@ -125,7 +125,7 @@
       },
       "properties":
       {
-        "name": "[concat(variables('HostingPlanName'),copyIndex())]",
+        "name": "[concat(variables('HostingPlanName'),copyIndex())]"
       },
       "copy":
       {
@@ -155,71 +155,100 @@
       },
       "resources":
       [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "config",
-          "dependsOn":
-          [
-            "[resourceId('Microsoft.Web/sites',concat(variables('WebSiteName'),copyIndex()))]"
-          ],
-          "properties":
-          {
-            "netFrameworkVersion": "4.6",
-            "alwaysOn": true,
-            "requestTracingEnaled": true,
-            "httpLoggingEnabled": true,
-            "logsDirectorySizeLimit": 40,
-            "detailedErrorLoggingEnabled": true,
-            "remoteDebuggingEnabled": false,
-            "remoteDebuggingVersion": "VS2013",
-            "defaultDocuments":
-            [
-
-              "index.html",
-              "hostingstart.html"
-            ]
-          }
-        },
-        {
-          "apiVersion": "2015-08-01",
-          "name": "appsettings",
-          "type": "config",
-          "dependsOn":
-          [
-            "[resourceId('Microsoft.Web/Sites', concat(variables('WebSiteName'),copyIndex()))]"
-          ],
-          "properties":
-          {
-            "ida:Tenant": "[parameters('aadTenant')]",
-            "ida:Audience": "[parameters('aadAudience')]",
-            "localStorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
-            "redisCacheConnectionString": "[concat(variables('RedisCacheName'), copyIndex(),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=',listKeys(resourceId('Microsoft.Cache/Redis',concat(variables('RedisCacheName'), copyIndex())),'2014-04-01-preview').primaryKey)]",
-            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
-            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
-            "currentRegion": "[parameters('siteLocations')[copyIndex()]]"
-
-          }
-        },
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn":
-          [
-            "[resourceId('Microsoft.Web/sites', concat(variables('WebSiteName'),copyIndex()))]"
-          ],
-          "properties":
-          {
-            "RepoUrl": "https://github.com/kaevans/globalscaledemo.git",
-            "branch": "master",
-            "isManualIntegration": true
-          }
-        }
       ],
       "copy":
       {
         "name": "siteCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[concat(variables('WebSiteName'), copyIndex(), '/', 'web')]",
+      "type": "Microsoft.Web/sites/config",
+      "dependsOn":
+      [
+        "[resourceId('Microsoft.Web/sites',concat(variables('WebSiteName'),copyIndex()))]"
+      ],
+      "tags":
+      {
+        "displayName": "webProperties"
+      },
+      "properties":
+      {
+        "netFrameworkVersion": "4.6",
+        "alwaysOn": true,
+        "requestTracingEnaled": true,
+        "httpLoggingEnabled": true,
+        "logsDirectorySizeLimit": 40,
+        "detailedErrorLoggingEnabled": true,
+        "remoteDebuggingEnabled": false,
+        "remoteDebuggingVersion": "VS2013",
+        "defaultDocuments":
+        [
+
+          "index.html",
+          "hostingstart.html"
+        ]
+      },
+      "copy":
+      {
+        "name": "webSettingsCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[concat(variables('WebSiteName'), copyIndex(), '/', 'appSettings')]",
+      "type": "Microsoft.Web/sites/config",
+      "dependsOn":
+      [
+        "[resourceId('Microsoft.Web/Sites', concat(variables('WebSiteName'),copyIndex()))]",
+        "webSettingsCopy"
+      ],
+      "properties":
+      {
+        "ida:Tenant": "[parameters('aadTenant')]",
+        "ida:Audience": "[parameters('aadAudience')]",
+        "localStorageConnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+        "redisCacheConnectionString": "[concat(variables('RedisCacheName'), copyIndex(),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=',listKeys(resourceId('Microsoft.Cache/Redis',concat(variables('RedisCacheName'), copyIndex())),'2014-04-01-preview').primaryKey)]",
+        "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+        "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',toLower(concat(variables('StorageName'), copyIndex())),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',concat(variables('StorageName'), copyIndex())),'2015-05-01-preview').key1)]",
+        "currentRegion": "[parameters('siteLocations')[copyIndex()]]"
+
+      },
+      "tags":
+      {
+        "displayName": "appSettings"
+      },
+      "copy":
+      {
+        "name": "appSettingsCopy",
+        "count": "[length(parameters('siteLocations'))]"
+      }
+    },
+    {
+      "apiVersion": "2015-08-01",
+      "name": "[concat(variables('WebSiteName'), copyIndex(), '/', 'web')]",
+      "type": "Microsoft.Web/sites/sourcecontrols",
+      "dependsOn":
+      [
+        "[resourceId('Microsoft.Web/sites', concat(variables('WebSiteName'),copyIndex()))]",
+        "appSettingsCopy"
+      ],
+      "properties":
+      {
+        "RepoUrl": "https://github.com/kaevans/globalscaledemo.git",
+        "branch": "master",
+        "isManualIntegration": true
+      },
+      "tags":
+      {
+        "displayName": "sourceControl"
+      },       
+      "copy":
+      {
+        "name": "sourceControlCopy",
         "count": "[length(parameters('siteLocations'))]"
       }
     },
@@ -434,7 +463,7 @@
         "name": "appInsightsCopy",
         "count": "[length(parameters('siteLocations'))]"
       }
-    }    
+    }
   ],
   "outputs":
   {

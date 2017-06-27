@@ -1,3 +1,7 @@
+> **Update:** Hello! As of 1 January 2017 this content is no longer being actively managed and updated. It is provided as-is and may contain information that has changed. Any Issues will be addressed on a best-effort basis. Please see [Azure.com](http://www.azure.com) for the latest guidance. Thank you for your understanding.
+
+---
+
 # Global Demo
 This sample demonstrates multiple Azure services in an active-active replication scenario.  From deployment using ARM to securing access to Azure storage, this sample has a number of interesting patterns and approaches to use in your solutions. 
 
@@ -11,7 +15,7 @@ When the file is uploaded, it is replicated to multiple storage accounts around 
   <img src="http://armviz.io/visualizebutton.png"/>
 </a>
   
-##Deployment
+## Deployment
 Deployment is performed using an Azure Resource Manager template.  The template will deploy the solution to as many regions as you wish, creating a local storage account and Azure Redis Cache.
 
 1. Clone this repository locally.  
